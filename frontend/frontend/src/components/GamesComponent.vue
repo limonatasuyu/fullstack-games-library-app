@@ -17,8 +17,8 @@
 					<td>{{i.title}}</td><td>{{i.genre}}</td><td>{{i.played ? 'Yes' : 'No'}}</td>
 					<td>
 						<div class='flex' role='group'>
-							<button type='button' class='button bg-blue'>Update</button>
-							<button type='button' class='button bg-red'>Delete</button>
+							<button @click='toggleIsUpdating(i.id)' type='button' class='button bg-blue'>Update</button>
+							<button @click='removeGame(i.id)' type='button' class='button bg-red'>Delete</button>
 						</div>
 					</td>
 				</tr>
@@ -41,6 +41,24 @@
 				<button @click="onSubmit" class="button bg-blue">Submit</button>
 			</form>
 		</div>
+		<hr />
+		<div v-if='isUpdating' class="form-container">
+			<form>
+				<div class="input-container flex">
+					<label for="game-title-input">Game Title</label>
+					<input v-model="editForm.title" id="game-title-input" type="text" required/>
+				</div>
+				<div class="input-container flex">
+					<label for="game-genre-input">Game Genre</label>
+					<input v-model="editForm.genre" id="game-genre-input" type="text" required/>
+				</div>
+				<div class="input-container flex">
+					<label for="game-played-input">Played</label>
+					<input v-model="editForm.played" id="game-played-input" type="checkbox" />
+				</div>
+				<button @click="onUpdateSubmit" class="button bg-green">Submit</button>
+			</form>
+		</div>
 	</div>
 </template>
 <style>
@@ -60,7 +78,15 @@ export default {
 				title: "",
 				genre: "",
 				played: [],
-			}
+			},
+			editForm: {
+				id: "",
+				title: "",
+				genre: "",
+				played: []
+			},
+			isUpdating: false,
+
 		}
 	},
 	methods: {
@@ -74,7 +100,7 @@ export default {
 			const path = 'http://localhost:5000/games'
 			axios.post(path, payload)
 				.then(() => this.getGamesData())
-				.catch((err) => {console.log(err); this.getGames()})
+				.catch((err) => {console.log(err); this.getGamesData()})
 		},
 		initForm() {
 			this.addGameForm.title = "",
@@ -93,6 +119,30 @@ export default {
 			this.addGamesData(payload);
 			this.initForm();
 		},
+		toggleIsUpdating(id) {this.isUpdating = !this.isUpdating; this.editForm.id = id},
+		updateGame(payload, gameID) {
+			const path = `http://localhost:5000/games/${gameID}`
+			axios.put(path, payload)
+				.then(() => {this.getGamesData()})
+				.catch(err => {console.log(err); this.getGamesData()})
+		},
+		onUpdateSubmit(e) {
+			e.preventDefault()
+			let played = false
+			if (this.editForm.played[0]) played = true;
+			const payload = {
+				title: this.editForm.title,
+				genre: this.editForm.genre,
+				played,
+			}
+			this.updateGame(payload, this.editForm.id)
+		},
+		removeGame(gameId) {
+			const path = `http://localhost:5000/games/${gameId}`
+			axios.delete(path)
+				.then(() => {this.getGamesData(); this.message = "Game removed"})
+				.catch(err => {console.log(err); this.getGamesData()})
+		}
 	},
 	created() {this.getGamesData()}
 }
