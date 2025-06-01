@@ -9,7 +9,7 @@ const routes = [
 		component: SharkComponent
 	},
 	{
-		path: '/games',
+		path: '/',
 		name: 'GamesComponent',
 		component: GamesComponent
 	}
